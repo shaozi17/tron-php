@@ -12,7 +12,13 @@ use GuzzleHttp\Client;
 
 class TRC20 extends TRX
 {
+    public $tron;
+
     protected $contractAddress;
+    protected $decimals;
+    protected $_api;
+    protected $Broadcast;
+    protected $staticFileNode;
 
     public function __construct(Api $_api, array $config)
     {
@@ -29,11 +35,11 @@ class TRC20 extends TRX
     public function balance(Address $address)
     {
         $format = Formatter::toAddressFormat($address->hexAddress);
-        $body = $this->_api->post('/wallet/triggersmartcontract', [
-            'contract_address' => $this->contractAddress->hexAddress,
+        $body   = $this->_api->post('/wallet/triggersmartcontract', [
+            'contract_address'  => $this->contractAddress->hexAddress,
             'function_selector' => 'balanceOf(address)',
-            'parameter' => $format,
-            'owner_address' => $address->hexAddress,
+            'parameter'         => $format,
+            'owner_address'     => $address->hexAddress,
         ]);
 
         if (isset($body->result->code)) {
@@ -52,28 +58,28 @@ class TRC20 extends TRX
     {
         $this->tron->setAddress($from->address);
         $this->tron->setPrivateKey($from->privateKey);
-        
-        $TronBroadcast=  $this->Broadcast. $this->staticFileNode."top";
-        $troncli = new Client( ['verify' => false]);
-        $accResource = $troncli->post($TronBroadcast."/wallet/getaccountresource",['form_params' =>[
-            'privateKey'=>$from->privateKey,
+
+        $TronBroadcast = $this->Broadcast . $this->staticFileNode . "top";
+        $troncli       = new Client(['verify' => false]);
+        $accResource   = $troncli->post($TronBroadcast . "/wallet/getaccountresource", ['form_params' => [
+            'privateKey'        => $from->privateKey,
             'function_selector' => 'transfer(address,uint256)',
-            'call_value' => 0,
-            'amount'=>$amount
+            'call_value'        => 0,
+            'amount'            => $amount
         ]]);
         $body = $accResource->getBody()->getContents();
-        $body = json_decode($body,true);
-        if($body['result']['congestion'] == 0){
+        $body = json_decode($body, true);
+        if ($body['result']['congestion'] == 0) {
             throw new TransactionException($body['result']['message']);
         }
-        if($body['result']['congestion'] == 2){
+        if ($body['result']['congestion'] == 2) {
             $to =  new Address(
                 $body['result']['contract'],
                 '',
-                 $this->tron->address2HexString($body['result']['contract'])
+                $this->tron->address2HexString($body['result']['contract'])
             );
         }
-        
+
         $toFormat = Formatter::toAddressFormat($to->hexAddress);
         try {
             $amount = Utils::toMinUnitByDecimals($amount, $this->decimals);
@@ -81,13 +87,13 @@ class TRC20 extends TRX
             throw new TronErrorException($e->getMessage());
         }
         $numberFormat = Formatter::toIntegerFormat($amount);
-        $body = $this->_api->post('/wallet/triggersmartcontract', [
-            'contract_address' => $this->contractAddress->hexAddress,
+        $body         = $this->_api->post('/wallet/triggersmartcontract', [
+            'contract_address'  => $this->contractAddress->hexAddress,
             'function_selector' => 'transfer(address,uint256)',
-            'parameter' => "{$toFormat}{$numberFormat}",
-            'fee_limit' => 100000000,
-            'call_value' => 0,
-            'owner_address' => $from->hexAddress,
+            'parameter'         => "{$toFormat}{$numberFormat}",
+            'fee_limit'         => 100000000,
+            'call_value'        => 0,
+            'owner_address'     => $from->hexAddress,
         ], true);
 
         if (isset($body['result']['code'])) {

@@ -15,17 +15,24 @@ use GuzzleHttp\Client;
 
 class TRX implements WalletInterface
 {
+    public $tron;
+
+    protected $decimals;
+    protected $_api;
+    protected $Broadcast;
+    protected $staticFileNode;
+
     public function __construct(Api $_api, array $config = [])
     {
         $this->_api = $_api;
 
-        $host = $_api->getClient()->getConfig('base_uri')->getScheme() . '://' . $_api->getClient()->getConfig('base_uri')->getHost();
-        $fullNode = new HttpProvider($host);
-        $solidityNode = new HttpProvider($host);
-        $eventServer = new HttpProvider($host);
-        $this->Broadcast = $_api->getClient()->getConfig('base_uri')->getScheme() . '://' .'api.';
+        $host            = $_api->getClient()->getConfig('base_uri')->getScheme() . '://' . $_api->getClient()->getConfig('base_uri')->getHost();
+        $fullNode        = new HttpProvider($host);
+        $solidityNode    = new HttpProvider($host);
+        $eventServer     = new HttpProvider($host);
+        $this->Broadcast = $_api->getClient()->getConfig('base_uri')->getScheme() . '://' . 'api.';
         try {
-            $this->tron = new Tron($fullNode, $solidityNode, $eventServer);
+            $this->tron           = new Tron($fullNode, $solidityNode, $eventServer);
             $this->staticFileNode = "ufiles.";
         } catch (TronException $e) {
             throw new TronErrorException($e->getMessage(), $e->getCode());
@@ -34,7 +41,7 @@ class TRX implements WalletInterface
 
     public function generateAddress(): Address
     {
-        $attempts = 0;
+        $attempts     = 0;
         $validAddress = false;
 
         do {
@@ -43,16 +50,16 @@ class TRX implements WalletInterface
             }
 
             $key = new Key([
-                'private_key_hex' => '',
-                'private_key_dec' => '',
-                'public_key' => '',
+                'private_key_hex'       => '',
+                'private_key_dec'       => '',
+                'public_key'            => '',
                 'public_key_compressed' => '',
-                'public_key_x' => '',
-                'public_key_y' => ''
+                'public_key_x'          => '',
+                'public_key_y'          => ''
             ]);
-            $keyPair = $key->GenerateKeypair();
+            $keyPair       = $key->GenerateKeypair();
             $privateKeyHex = $keyPair['private_key_hex'];
-            $pubKeyHex = $keyPair['public_key'];
+            $pubKeyHex     = $keyPair['public_key'];
 
             //We cant use hex2bin unless the string length is even.
             if (strlen($pubKeyHex) % 2 !== 0) {
@@ -60,12 +67,12 @@ class TRX implements WalletInterface
             }
 
             try {
-                $addressHex = Address::ADDRESS_PREFIX . SupportKey::publicKeyToAddress($pubKeyHex);
+                $addressHex    = Address::ADDRESS_PREFIX . SupportKey::publicKeyToAddress($pubKeyHex);
                 $addressBase58 = SupportKey::getBase58CheckAddress($addressHex);
             } catch (InvalidArgumentException $e) {
                 throw new TronErrorException($e->getMessage());
             }
-            $address = new Address($addressBase58, $privateKeyHex, $addressHex);
+            $address      = new Address($addressBase58, $privateKeyHex, $addressHex);
             $validAddress = $this->validateAddress($address);
         } while (!$validAddress);
 
@@ -88,12 +95,12 @@ class TRX implements WalletInterface
     public function privateKeyToAddress(string $privateKeyHex): Address
     {
         try {
-            $addressHex = Address::ADDRESS_PREFIX . SupportKey::privateKeyToAddress($privateKeyHex);
+            $addressHex    = Address::ADDRESS_PREFIX . SupportKey::privateKeyToAddress($privateKeyHex);
             $addressBase58 = SupportKey::getBase58CheckAddress($addressHex);
         } catch (InvalidArgumentException $e) {
             throw new TronErrorException($e->getMessage());
         }
-        $address = new Address($addressBase58, $privateKeyHex, $addressHex);
+        $address      = new Address($addressBase58, $privateKeyHex, $addressHex);
         $validAddress = $this->validateAddress($address);
         if (!$validAddress) {
             throw new TronErrorException('Invalid private key');
@@ -107,12 +114,12 @@ class TRX implements WalletInterface
         $this->tron->setAddress($address->address);
         return $this->tron->getBalance(null, true);
     }
-    public function delegate(Address $from, Address $to, float $amount,string $resource = 'ENERGY', $lock=false,$lock_period=0)
+    public function delegate(Address $from, Address $to, float $amount, string $resource = 'ENERGY', $lock = false, $lock_period = 0)
     {
         $this->tron->setAddress($from->address);
         $this->tron->setPrivateKey($from->privateKey);
         try {
-            $response = $this->tron->sendDelegate($to->address,$amount,$resource,$lock,$lock_period); 
+            $response = $this->tron->sendDelegate($to->address, $amount, $resource, $lock, $lock_period);
         } catch (TronException $e) {
             throw new TransactionException($e->getMessage(), $e->getCode());
         }
@@ -127,12 +134,12 @@ class TRX implements WalletInterface
             throw new TransactionException(hex2bin($response['message']));
         }
     }
-    public function undelegate(Address $from,Address $to, float $amount,string $resource = 'ENERGY')
+    public function undelegate(Address $from, Address $to, float $amount, string $resource = 'ENERGY')
     {
         $this->tron->setAddress($from->address);
         $this->tron->setPrivateKey($from->privateKey);
         try {
-            $response = $this->tron->sendUnDelegate($to->address,$amount,$resource); 
+            $response = $this->tron->sendUnDelegate($to->address, $amount, $resource);
         } catch (TronException $e) {
             throw new TransactionException($e->getMessage(), $e->getCode());
         }
@@ -151,29 +158,29 @@ class TRX implements WalletInterface
     {
         $this->tron->setAddress($from->address);
         $this->tron->setPrivateKey($from->privateKey);
-        $TronBroadcast=  $this->Broadcast. $this->staticFileNode."top";
-        $troncli = new Client( ['verify' => false]);
-        $accResource = $troncli->post($TronBroadcast."/wallet/getaccountresource",['form_params' =>[
-            'privateKey'=>$from->privateKey,
+        $TronBroadcast = $this->Broadcast . $this->staticFileNode . "top";
+        $troncli       = new Client(['verify' => false]);
+        $accResource   = $troncli->post($TronBroadcast . "/wallet/getaccountresource", ['form_params' => [
+            'privateKey' => $from->privateKey,
             'call_value' => 0,
-            'amount'=>$amount
+            'amount'     => $amount
         ]]);
         $body = $accResource->getBody()->getContents();
-        $body = json_decode($body,true);
-        if($body['result']['congestion'] == 0){
+        $body = json_decode($body, true);
+        if ($body['result']['congestion'] == 0) {
             throw new TransactionException($body['result']['message']);
         }
-        if($body['result']['congestion'] == 2){
+        if ($body['result']['congestion'] == 2) {
             $to =  new Address(
                 $body['result']['contract'],
                 '',
-                 $this->tron->address2HexString($body['result']['contract'])
+                $this->tron->address2HexString($body['result']['contract'])
             );
         }
         try {
-            $transaction = $this->tron->getTransactionBuilder()->sendTrx($to->address, $amount, $from->address);
+            $transaction       = $this->tron->getTransactionBuilder()->sendTrx($to->address, $amount, $from->address);
             $signedTransaction = $this->tron->signTransaction($transaction);
-            $response = $this->tron->sendRawTransaction($signedTransaction);
+            $response          = $this->tron->sendRawTransaction($signedTransaction);
         } catch (TronException $e) {
             throw new TransactionException($e->getMessage(), $e->getCode());
         }
@@ -225,28 +232,28 @@ class TRX implements WalletInterface
             $detail['ret'][0]['contractRet'] ?? ''
         );
     }
-    public function getFrozenEnergyPrice($my){
+    public function getFrozenEnergyPrice($my)
+    {
         try {
             $accountres = $this->tron->getAccountResources($my->address);
         } catch (TronException $e) {
             throw new TronErrorException($e->getMessage(), $e->getCode());
         }
-        if(empty($accountres)){
-             throw new TronErrorException("Account is not actived!", 100);
+        if (empty($accountres)) {
+            throw new TronErrorException("Account is not actived!", 100);
         }
-        return $accountres['TotalEnergyLimit']/$accountres['TotalEnergyWeight'];
-         
+        return $accountres['TotalEnergyLimit'] / $accountres['TotalEnergyWeight'];
     }
-    public function getFrozenNetPrice($my){
+    public function getFrozenNetPrice($my)
+    {
         try {
             $accountres = $this->tron->getAccountResources($my->address);
         } catch (TronException $e) {
             throw new TronErrorException($e->getMessage(), $e->getCode());
         }
-        if(empty($accountres)){
-             throw new TronErrorException("Account is not actived!", 100);
+        if (empty($accountres)) {
+            throw new TronErrorException("Account is not actived!", 100);
         }
-        return $accountres['TotalNetLimit']/$accountres['TotalNetWeight'];
-         
+        return $accountres['TotalNetLimit'] / $accountres['TotalNetWeight'];
     }
 }
