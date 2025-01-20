@@ -6,8 +6,8 @@
  * @category tron-php
  * @package  tron-php
  * @author   Fenguoz <243944672@qq.com>
- * @license  https://github.com/Fenguoz/tron-php/blob/master/LICENSE MIT
- * @link     https://github.com/Fenguoz/tron-php
+ * @license  https: //github.com/Fenguoz/tron-php/blob/master/LICENSE MIT
+ * @link     https: //github.com/Fenguoz/tron-php
  */
 
 namespace Tests;
@@ -20,15 +20,15 @@ use Tron\TRX;
 
 class TRXTest extends TestCase
 {
-    const URI = 'https://api.shasta.trongrid.io'; // shasta testnet
-    const ADDRESS = 'TGytofNKuSReFmFxsgnNx19em3BAVBTpVB';
+    const URI         = 'https://api.shasta.trongrid.io';                                      // shasta testnet
+    const ADDRESS     = 'TGytofNKuSReFmFxsgnNx19em3BAVBTpVB';
     const PRIVATE_KEY = '0xf1b4b7d86a3eff98f1bace9cb2665d0cad3a3f949bc74a7ffb2aaa968c07f521';
-    const BLOCK_ID = 13402554;
-    const TX_HASH = '539e6c2429f19a8626fadc1211985728e310f5bd5d2749c88db2e3f22a8fdf69';
+    const BLOCK_ID    = 13402554;
+    const TX_HASH     = '539e6c2429f19a8626fadc1211985728e310f5bd5d2749c88db2e3f22a8fdf69';
 
     private function getTRX()
     {
-        $api = new Api(new Client(['base_uri' => self::URI]));
+        $api       = new Api(new Client(['base_uri' => self::URI]));
         $trxWallet = new TRX($api);
         return $trxWallet;
     }
@@ -43,7 +43,7 @@ class TRXTest extends TestCase
 
     public function testPrivateKeyToAddress()
     {
-        $privateKey = self::PRIVATE_KEY;
+        $privateKey  = self::PRIVATE_KEY;
         $addressData = $this->getTRX()->privateKeyToAddress($privateKey);
         var_dump($addressData);
 
@@ -66,11 +66,11 @@ class TRXTest extends TestCase
     public function testTransfer()
     {
         $privateKey = self::PRIVATE_KEY;
-        $address = self::ADDRESS;
-        $amount = 1;
+        $address    = self::ADDRESS;
+        $amount     = 1;
 
         $from = $this->getTRX()->privateKeyToAddress($privateKey);
-        $to = new Address(
+        $to   = new Address(
             $address,
             '',
             $this->getTRX()->tron->address2HexString($address)
@@ -91,7 +91,7 @@ class TRXTest extends TestCase
 
     public function testBlockByNumber()
     {
-        $blockID = self::BLOCK_ID;
+        $blockID   = self::BLOCK_ID;
         $blockData = $this->getTRX()->blockByNumber($blockID);
         var_dump($blockData);
 
@@ -103,6 +103,18 @@ class TRXTest extends TestCase
         $txHash = self::TX_HASH;
         $txData = $this->getTRX()->transactionReceipt($txHash);
         var_dump($txData);
+
+        $this->assertTrue(true);
+    }
+
+    public function testDelegate()
+    {
+        $privateKey = self::PRIVATE_KEY;
+        $amount     = 1;
+
+        $fromAddr = $this->getTRX()->privateKeyToAddress($privateKey);
+        $delegate = $this->getTRX()->delegate($fromAddr, $fromAddr, $amount);
+        var_dump($delegate);
 
         $this->assertTrue(true);
     }
