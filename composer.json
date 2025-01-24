@@ -17,7 +17,7 @@
     }
   ],
   "require": {
-    "shaozi17/tron-api": "^0.0.3",
+    "shaozi17/tron-api": "^0.0.5",
     "ionux/phactor": "1.0.8",
     "kornrunner/keccak": "^1.0"
   },
