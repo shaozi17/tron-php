@@ -12,13 +12,8 @@ use GuzzleHttp\Client;
 
 class TRC20 extends TRX
 {
-    public $tron;
-
     protected $contractAddress;
     protected $decimals;
-    protected $_api;
-    protected $Broadcast;
-    protected $staticFileNode;
 
     public function __construct(Api $_api, array $config)
     {
@@ -59,9 +54,8 @@ class TRC20 extends TRX
         $this->tron->setAddress($from->address);
         $this->tron->setPrivateKey($from->privateKey);
 
-        $TronBroadcast = $this->Broadcast . $this->staticFileNode . "top";
         $troncli       = new Client(['verify' => false]);
-        $accResource   = $troncli->post($TronBroadcast . "/wallet/getaccountresource", ['form_params' => [
+        $accResource   = $troncli->post($this->host . "/wallet/getaccountresource", ['form_params' => [
             'privateKey'        => $from->privateKey,
             'function_selector' => 'transfer(address,uint256)',
             'call_value'        => 0,
