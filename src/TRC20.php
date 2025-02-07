@@ -27,17 +27,23 @@ class TRC20 extends TRX
         $this->decimals = $config['decimals'];
     }
 
-    public function balance(Address $address)
+    public function balance(string $address)
     {
-        $format = Formatter::toAddressFormat($address->hexAddress);
+        $hex_addr = $this->tron->address2HexString($address);
+
         $body   = $this->_api->post('/wallet/triggersmartcontract', [
             'contract_address'  => $this->contractAddress->hexAddress,
             'function_selector' => 'balanceOf(address)',
-            'parameter'         => $format,
-            'owner_address'     => $address->hexAddress,
+            'parameter'         => Formatter::toAddressFormat($hex_addr),
+            'owner_address'     => $hex_addr,
         ]);
 
         if (isset($body->result->code)) {
+            if ($body->result->code == 'CONTRACT_VALIDATE_ERROR') {
+                //没有激活过合约
+                return '0';
+            }
+
             throw new TronErrorException(hex2bin($body->result->message));
         }
 
@@ -46,10 +52,43 @@ class TRC20 extends TRX
         } catch (InvalidArgumentException $e) {
             throw new TronErrorException($e->getMessage());
         }
+
         return $balance;
     }
 
-    public function transfer(Address $from, Address $to, float $amount): Transaction
+
+    // public function balance(string $address)
+    // {
+    //     $body = $this->_api->get('v1/accounts/' . $address);
+
+    //     return $body;
+    // }
+
+    public function transfer(Address $account, string $to_address, float $amount, $message = null): Transaction
+    {
+        try {
+            $this->tron->setAddress($account->address);
+            $this->tron->setPrivateKey($account->privateKey);
+
+            // $token_id = '1002000';
+            $token_id = $this->contractAddress->address;
+            $response = $this->tron->sendToken($to_address, $amount, $token_id, $account->address);
+        } catch (TronException $e) {
+            throw new TransactionException($e->getMessage(), $e->getCode());
+        }
+
+        if (!isset($response['result']) || $response['result'] != true) {
+            throw new TransactionException(hex2bin($response['message']));
+        }
+
+        return new Transaction(
+            $response['txID'],
+            $response['raw_data'],
+            'PACKING'
+        );
+    }
+
+    public function transfer_back(Address $from, string $to_address, float $amount, $message = null): Transaction
     {
         $this->tron->setAddress($from->address);
         $this->tron->setPrivateKey($from->privateKey);
