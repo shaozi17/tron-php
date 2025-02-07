@@ -14,9 +14,9 @@ interface WalletInterface
 
     public function privateKeyToAddress(string $privateKeyHex): Address;
 
-    public function balance(Address $address);
+    public function balance(string $address);
 
-    public function transfer(Address $from, Address $to, float $amount): Transaction;
+    public function transfer(Address $account, string $to, float $amount, $message = null): Transaction;
 
     public function blockNumber(): Block;
 

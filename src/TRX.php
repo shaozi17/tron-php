@@ -11,7 +11,6 @@ use Tron\Exceptions\TronErrorException;
 use Tron\Exceptions\TransactionException;
 use Tron\Support\Key as SupportKey;
 use InvalidArgumentException;
-use GuzzleHttp\Client;
 
 class TRX implements WalletInterface
 {
@@ -20,7 +19,7 @@ class TRX implements WalletInterface
     protected $_api;
     protected $host;
 
-    public function __construct(Api $_api, array $config = [])
+    public function __construct(Api $_api)
     {
         $base_uri     = $_api->getClient()->getConfig('base_uri');
         $this->_api   = $_api;
@@ -105,70 +104,31 @@ class TRX implements WalletInterface
         return $address;
     }
 
-    public function balance(Address $address)
+    public function balance(string $address)
     {
-        $this->tron->setAddress($address->address);
-        return $this->tron->getBalance(null, true);
+        return $this->tron->getBalance($address, true);
     }
-    public function delegate(Address $from, Address $to, float $amount, string $resource = 'ENERGY', $lock = false, $lock_period = 0)
+
+    public function transfer(Address $account, string $to_address, float $amount, $message = null): Transaction
     {
-        $this->tron->setAddress($from->address);
-        $this->tron->setPrivateKey($from->privateKey);
         try {
-            $response = $this->tron->sendDelegate($to->address, $amount, $resource, $lock, $lock_period);
+            $this->tron->setAddress($account->address);
+            $this->tron->setPrivateKey($account->privateKey);
+
+            $response = $this->tron->sendTransaction($to_address, $amount, $message, $account->address);
         } catch (TronException $e) {
             throw new TransactionException($e->getMessage(), $e->getCode());
         }
 
-        if (isset($response['result']) && $response['result'] == true) {
-            return new Transaction(
-                $response['txID'],
-                $response['raw_data'],
-                'DelegateResourceContract'
-            );
-        } else {
+        if (!isset($response['result']) || $response['result'] != true) {
             throw new TransactionException(hex2bin($response['message']));
-        }
-    }
-    public function undelegate(Address $from, Address $to, float $amount, string $resource = 'ENERGY')
-    {
-        $this->tron->setAddress($from->address);
-        $this->tron->setPrivateKey($from->privateKey);
-        try {
-            $response = $this->tron->sendUnDelegate($to->address, $amount, $resource);
-        } catch (TronException $e) {
-            throw new TransactionException($e->getMessage(), $e->getCode());
         }
 
-        if (isset($response['result']) && $response['result'] == true) {
-            return new Transaction(
-                $response['txID'],
-                $response['raw_data'],
-                'UnDelegateResourceContract'
-            );
-        } else {
-            throw new TransactionException(hex2bin($response['message']));
-        }
-    }
-    public function transfer(Address $from, Address $to, float $amount): Transaction
-    {
-        try {
-            $this->tron->setAddress($from->address);
-            $this->tron->setPrivateKey($from->privateKey);
-            $response = $this->tron->sendTransaction($to->address, $amount, null, $from->address);
-        } catch (TronException $e) {
-            throw new TransactionException($e->getMessage(), $e->getCode());
-        }
-
-        if (isset($response['result']) && $response['result'] == true) {
-            return new Transaction(
-                $response['txID'],
-                $response['raw_data'],
-                'PACKING'
-            );
-        } else {
-            throw new TransactionException(hex2bin($response['message']));
-        }
+        return new Transaction(
+            $response['txID'],
+            $response['raw_data'],
+            'PACKING'
+        );
     }
 
     public function blockNumber(): Block
@@ -201,34 +161,11 @@ class TRX implements WalletInterface
         } catch (TronException $e) {
             throw new TronErrorException($e->getMessage(), $e->getCode());
         }
+
         return new Transaction(
             $detail['txID'],
             $detail['raw_data'],
             $detail['ret'][0]['contractRet'] ?? ''
         );
-    }
-    public function getFrozenEnergyPrice($my)
-    {
-        try {
-            $accountres = $this->tron->getAccountResources($my->address);
-        } catch (TronException $e) {
-            throw new TronErrorException($e->getMessage(), $e->getCode());
-        }
-        if (empty($accountres)) {
-            throw new TronErrorException("Account is not actived!", 100);
-        }
-        return $accountres['TotalEnergyLimit'] / $accountres['TotalEnergyWeight'];
-    }
-    public function getFrozenNetPrice($my)
-    {
-        try {
-            $accountres = $this->tron->getAccountResources($my->address);
-        } catch (TronException $e) {
-            throw new TronErrorException($e->getMessage(), $e->getCode());
-        }
-        if (empty($accountres)) {
-            throw new TronErrorException("Account is not actived!", 100);
-        }
-        return $accountres['TotalNetLimit'] / $accountres['TotalNetWeight'];
     }
 }
