@@ -38,6 +38,23 @@ class Api
 
         return $body;
     }
+
+    /**
+     * Abstracts some common functionality like formatting the get data
+     * along with error handling.
+     *
+     * @throws TronErrorException
+     */
+    public function get(string $endpoint, array $options = [], bool $returnAssoc = false)
+    {
+        $stream = (string)$this->getClient()->get($endpoint, $options)->getBody();
+        $body = json_decode($stream, $returnAssoc);
+
+        $this->checkForErrorResponse($returnAssoc, $body);
+
+        return $body;
+    }
+
     //     /**
     // * Abstracts some common functionality like formatting the post data
     // * along with error handling.
