@@ -81,6 +81,46 @@ class Stake extends TRX
     }
 
     /**
+     * 查询在Stake2.0阶段，某地址的资源委托索引
+     */
+    public function getDelegateInfo($address = null)
+    {
+        $accounts = $this->tron->getdelegatedresourceaccountindexv2($address);
+        $info     = [];
+        foreach ($accounts as $account) {
+            $info[] = [
+                'addressHex' => $account,
+                'address'    => self::hexToAddress($account),
+            ];
+        }
+        return $info;
+    }
+
+    /**
+     * 查询当前解质押剩余次数
+     */
+    public function getAvailableUnfreezeCount($address = null)
+    {
+        return $this->tron->getAvailableUnfreezeCount($address);
+    }
+
+    /**
+     * 获取可以解质押的带宽最大值
+     */
+    public function getCanUndelegatedNet($address = null)
+    {
+        return $this->tron->getCanDelegatedMaxSize(0, $address);
+    }
+
+    /**
+     * 获取可以解质押的能量最大值
+     */
+    public function getCanUndelegatedEnergy($address = null)
+    {
+        return $this->tron->getCanDelegatedMaxSize(1, $address);
+    }
+
+    /**
      * 质押1trx获得的能量
      */
     public function getFrozenEnergyPrice($address = null)
