@@ -34,6 +34,14 @@ class TRX implements WalletInterface
         }
     }
 
+    /**
+     * 哈希转地址
+     */
+    public static function hexToAddress($addressHex)
+    {
+        return \Tron\Support\Key::getBase58CheckAddress($addressHex);
+    }
+
     public function generateAddress(): Address
     {
         $attempts     = 0;
@@ -63,7 +71,7 @@ class TRX implements WalletInterface
 
             try {
                 $addressHex    = Address::ADDRESS_PREFIX . SupportKey::publicKeyToAddress($pubKeyHex);
-                $addressBase58 = SupportKey::getBase58CheckAddress($addressHex);
+                $addressBase58 = self::hexToAddress($addressHex);
             } catch (InvalidArgumentException $e) {
                 throw new TronErrorException($e->getMessage());
             }
@@ -91,7 +99,7 @@ class TRX implements WalletInterface
     {
         try {
             $addressHex    = Address::ADDRESS_PREFIX . SupportKey::privateKeyToAddress($privateKeyHex);
-            $addressBase58 = SupportKey::getBase58CheckAddress($addressHex);
+            $addressBase58 = self::hexToAddress($addressHex);
         } catch (InvalidArgumentException $e) {
             throw new TronErrorException($e->getMessage());
         }
