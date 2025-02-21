@@ -10,28 +10,28 @@ use Tron\Support\Utils;
 use InvalidArgumentException;
 use GuzzleHttp\Client;
 
-class TRC20 extends TRX
+class TRC20 extends TRON
 {
     protected $contractAddress;
-    protected $decimals;
+    protected $decimals = 6;
 
-    public function __construct(Api $_api, array $config)
+    public function __construct(string $base_uri = '', string $private_key = '', string $contract_address = 'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t')
     {
-        parent::__construct($_api, $config);
+        parent::__construct($base_uri, $private_key);
 
         $this->contractAddress = new Address(
-            $config['contract_address'],
+            $contract_address,
             '',
-            $this->tron->address2HexString($config['contract_address'])
+            $this->tron->address2HexString($contract_address)
         );
-        $this->decimals = $config['decimals'];
     }
 
-    public function balance(string $address)
+    public function balance(?string $address = null)
     {
+        $address = $address ?: $this->account->address;
         $hex_addr = $this->tron->address2HexString($address);
 
-        $body   = $this->_api->post('/wallet/triggersmartcontract', [
+        $body   = $this->api->post('/wallet/triggersmartcontract', [
             'contract_address'  => $this->contractAddress->hexAddress,
             'function_selector' => 'balanceOf(address)',
             'parameter'         => Formatter::toAddressFormat($hex_addr),
@@ -56,23 +56,12 @@ class TRC20 extends TRX
         return $balance;
     }
 
-
-    // public function balance(string $address)
-    // {
-    //     $body = $this->_api->get('v1/accounts/' . $address);
-
-    //     return $body;
-    // }
-
-    public function transfer(Address $account, string $to_address, float $amount, $message = null): Transaction
+    public function transfer(string $to_address, float $amount, $message = null): Transaction
     {
         try {
-            $this->tron->setAddress($account->address);
-            $this->tron->setPrivateKey($account->privateKey);
-
             // $token_id = '1002000';
             $token_id = $this->contractAddress->address;
-            $response = $this->tron->sendToken($to_address, $amount, $token_id, $account->address);
+            $response = $this->tron->sendToken($to_address, $amount, $token_id, $this->account->address);
         } catch (TronException $e) {
             throw new TransactionException($e->getMessage(), $e->getCode());
         }
@@ -88,66 +77,66 @@ class TRC20 extends TRX
         );
     }
 
-    public function transfer_back(Address $from, string $to_address, float $amount, $message = null): Transaction
-    {
-        $this->tron->setAddress($from->address);
-        $this->tron->setPrivateKey($from->privateKey);
+    // public function transfer_back(Address $from, string $to_address, float $amount, $message = null): Transaction
+    // {
+    //     $this->tron->setAddress($from->address);
+    //     $this->tron->setPrivateKey($from->privateKey);
 
-        $troncli       = new Client(['verify' => false]);
-        $accResource   = $troncli->post($this->host . "/wallet/getaccountresource", ['form_params' => [
-            'privateKey'        => $from->privateKey,
-            'function_selector' => 'transfer(address,uint256)',
-            'call_value'        => 0,
-            'amount'            => $amount
-        ]]);
-        $body = $accResource->getBody()->getContents();
-        $body = json_decode($body, true);
-        if ($body['result']['congestion'] == 0) {
-            throw new TransactionException($body['result']['message']);
-        }
-        if ($body['result']['congestion'] == 2) {
-            $to =  new Address(
-                $body['result']['contract'],
-                '',
-                $this->tron->address2HexString($body['result']['contract'])
-            );
-        }
+    //     $troncli       = new Client(['verify' => false]);
+    //     $accResource   = $troncli->post($this->host . "/wallet/getaccountresource", ['form_params' => [
+    //         'privateKey'        => $from->privateKey,
+    //         'function_selector' => 'transfer(address,uint256)',
+    //         'call_value'        => 0,
+    //         'amount'            => $amount
+    //     ]]);
+    //     $body = $accResource->getBody()->getContents();
+    //     $body = json_decode($body, true);
+    //     if ($body['result']['congestion'] == 0) {
+    //         throw new TransactionException($body['result']['message']);
+    //     }
+    //     if ($body['result']['congestion'] == 2) {
+    //         $to =  new Address(
+    //             $body['result']['contract'],
+    //             '',
+    //             $this->tron->address2HexString($body['result']['contract'])
+    //         );
+    //     }
 
-        $toFormat = Formatter::toAddressFormat($to->hexAddress);
-        try {
-            $amount = Utils::toMinUnitByDecimals($amount, $this->decimals);
-        } catch (InvalidArgumentException $e) {
-            throw new TronErrorException($e->getMessage());
-        }
-        $numberFormat = Formatter::toIntegerFormat($amount);
-        $body         = $this->_api->post('/wallet/triggersmartcontract', [
-            'contract_address'  => $this->contractAddress->hexAddress,
-            'function_selector' => 'transfer(address,uint256)',
-            'parameter'         => "{$toFormat}{$numberFormat}",
-            'fee_limit'         => 100000000,
-            'call_value'        => 0,
-            'owner_address'     => $from->hexAddress,
-        ], true);
+    //     $toFormat = Formatter::toAddressFormat($to->hexAddress);
+    //     try {
+    //         $amount = Utils::toMinUnitByDecimals($amount, $this->decimals);
+    //     } catch (InvalidArgumentException $e) {
+    //         throw new TronErrorException($e->getMessage());
+    //     }
+    //     $numberFormat = Formatter::toIntegerFormat($amount);
+    //     $body         = $this->api->post('/wallet/triggersmartcontract', [
+    //         'contract_address'  => $this->contractAddress->hexAddress,
+    //         'function_selector' => 'transfer(address,uint256)',
+    //         'parameter'         => "{$toFormat}{$numberFormat}",
+    //         'fee_limit'         => 100000000,
+    //         'call_value'        => 0,
+    //         'owner_address'     => $from->hexAddress,
+    //     ], true);
 
-        if (isset($body['result']['code'])) {
-            throw new TransactionException(hex2bin($body['result']['message']));
-        }
+    //     if (isset($body['result']['code'])) {
+    //         throw new TransactionException(hex2bin($body['result']['message']));
+    //     }
 
-        try {
-            $tradeobj = $this->tron->signTransaction($body['transaction']);
-            $response = $this->tron->sendRawTransaction($tradeobj);
-        } catch (TronException $e) {
-            throw new TransactionException($e->getMessage(), $e->getCode());
-        }
+    //     try {
+    //         $tradeobj = $this->tron->signTransaction($body['transaction']);
+    //         $response = $this->tron->sendRawTransaction($tradeobj);
+    //     } catch (TronException $e) {
+    //         throw new TransactionException($e->getMessage(), $e->getCode());
+    //     }
 
-        if (isset($response['result']) && $response['result'] == true) {
-            return new Transaction(
-                $body['transaction']['txID'],
-                $body['transaction']['raw_data'],
-                'PACKING'
-            );
-        } else {
-            throw new TransactionException('Transfer Fail');
-        }
-    }
+    //     if (isset($response['result']) && $response['result'] == true) {
+    //         return new Transaction(
+    //             $body['transaction']['txID'],
+    //             $body['transaction']['raw_data'],
+    //             'PACKING'
+    //         );
+    //     } else {
+    //         throw new TransactionException('Transfer Fail');
+    //     }
+    // }
 }

@@ -8,16 +8,6 @@ use Tron\Exceptions\TransactionException;
 
 class Stake extends TRX
 {
-    public function __construct(Api $_api, string $private_key = '')
-    {
-        parent::__construct($_api);
-
-        if ($private_key) {
-            $account = $this->privateKeyToAddress($private_key);
-            $this->tron->setAddress($account->address);
-            $this->tron->setPrivateKey($account->privateKey);
-        }
-    }
 
     /**
      * 质押TRX

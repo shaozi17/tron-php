@@ -16,7 +16,7 @@ interface WalletInterface
 
     public function balance(string $address);
 
-    public function transfer(Address $account, string $to, float $amount, $message = null): Transaction;
+    public function transfer(string $to, float $amount, $message = null): Transaction;
 
     public function blockNumber(): Block;
 
