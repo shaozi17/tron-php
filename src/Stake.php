@@ -12,7 +12,7 @@ class Stake extends TRX
     /**
      * 质押TRX
      */
-    public function freezeBalanceV2(string $address, float $amount, string $resource = 'ENERGY')
+    public function freezeBalanceV2(float $amount, string $resource = 'ENERGY', ?string $address = null)
     {
         return $this->tron->freezeBalanceV2($amount, $resource, $address);
     }
@@ -21,7 +21,7 @@ class Stake extends TRX
      * 解质押TRX
      * 解锁通过Stake2.0机制质押的TRX, 释放所相应数量的带宽和能量，同时回收相应数量的投票权(TP)
      */
-    public function unfreezeBalanceV2(string $address, float $amount, string $resource = 'ENERGY')
+    public function unfreezeBalanceV2(float $amount, string $resource = 'ENERGY', ?string $address = null)
     {
         return $this->tron->unfreezeBalanceV2($amount, $resource, $address);
     }
