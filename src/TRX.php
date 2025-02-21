@@ -7,11 +7,6 @@ use Tron\Exceptions\TransactionException;
 
 class TRX extends TRON
 {
-    public function __construct(string $base_uri = '', string $private_key = '')
-    {
-        parent::__construct($base_uri, $private_key);
-    }
-
     public function balance(?string $address = null)
     {
         return $this->tron->getBalance($address, true);

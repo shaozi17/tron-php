@@ -15,7 +15,7 @@ class TRC20 extends TRON
     protected $contractAddress;
     protected $decimals = 6;
 
-    public function __construct(string $base_uri = '', string $private_key = '', string $contract_address = 'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t')
+    public function __construct(string $base_uri = '', ?string $private_key = null, string $contract_address = 'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t')
     {
         parent::__construct($base_uri, $private_key);
 
