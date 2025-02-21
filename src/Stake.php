@@ -12,7 +12,7 @@ class Stake extends TRX
     /**
      * 质押TRX
      */
-    public function freezeBalanceV2(float $amount, string $resource = 'ENERGY', ?string $address = null)
+    public function freezeBalanceV2(float $amount, string $resource = self::ResourceEnergy, ?string $address = null)
     {
         return $this->tron->freezeBalanceV2($amount, $resource, $address);
     }
@@ -21,7 +21,7 @@ class Stake extends TRX
      * 解质押TRX
      * 解锁通过Stake2.0机制质押的TRX, 释放所相应数量的带宽和能量，同时回收相应数量的投票权(TP)
      */
-    public function unfreezeBalanceV2(float $amount, string $resource = 'ENERGY', ?string $address = null)
+    public function unfreezeBalanceV2(float $amount, string $resource = self::ResourceEnergy, ?string $address = null)
     {
         return $this->tron->unfreezeBalanceV2($amount, $resource, $address);
     }
@@ -29,7 +29,7 @@ class Stake extends TRX
     /**
      * 将带宽或者能量资源代理给其它账户
      */
-    public function delegate(string $to_address, float $amount, string $resource = 'ENERGY', $lock = false, $lock_period = 0)
+    public function delegate(string $to_address, float $amount, string $resource = self::ResourceEnergy, $lock = false, $lock_period = 0)
     {
         try {
             $response = $this->tron->sendDelegate($to_address, $amount, $resource, $lock, $lock_period);
@@ -51,7 +51,7 @@ class Stake extends TRX
     /**
      * 取消为目标地址代理的带宽或者能量
      */
-    public function undelegate(string $to_address, float $amount, string $resource = 'ENERGY')
+    public function undelegate(string $to_address, float $amount, string $resource = self::ResourceEnergy)
     {
         try {
             $response = $this->tron->sendUnDelegate($to_address, $amount, $resource);

@@ -20,6 +20,9 @@ abstract class TRON implements WalletInterface
 
     protected ?Address $account = null;
 
+    const ResourceEnergy    = 'ENERGY';     //能量资源
+    const ResourceBandwidth = 'BANDWIDTH';  //带宽资源
+
     public function __construct(string $base_uri = 'https://api.trongrid.io', ?string $private_key = null)
     {
         $this->api    = new Api(new Client(['base_uri' => $base_uri]));
