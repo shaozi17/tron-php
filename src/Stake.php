@@ -73,7 +73,7 @@ class Stake extends TRX
     /**
      * 查询在Stake2.0阶段，某地址的资源委托索引
      */
-    public function getDelegateInfo($address = null)
+    public function getDelegateInfo(?string $address = null)
     {
         $accounts = $this->tron->getdelegatedresourceaccountindexv2($address);
         $info     = [];
@@ -89,7 +89,7 @@ class Stake extends TRX
     /**
      * 查询当前解质押剩余次数
      */
-    public function getAvailableUnfreezeCount($address = null)
+    public function getAvailableUnfreezeCount(?string $address = null)
     {
         return $this->tron->getAvailableUnfreezeCount($address);
     }
@@ -97,7 +97,7 @@ class Stake extends TRX
     /**
      * 获取可以解质押的带宽最大值
      */
-    public function getCanUndelegatedNet($address = null)
+    public function getCanUndelegatedNet(?string $address = null)
     {
         return $this->tron->getCanDelegatedMaxSize(0, $address);
     }
@@ -105,7 +105,7 @@ class Stake extends TRX
     /**
      * 获取可以解质押的能量最大值
      */
-    public function getCanUndelegatedEnergy($address = null)
+    public function getCanUndelegatedEnergy(?string $address = null)
     {
         return $this->tron->getCanDelegatedMaxSize(1, $address);
     }
@@ -113,7 +113,7 @@ class Stake extends TRX
     /**
      * 质押1trx获得的能量
      */
-    public function getFrozenEnergyPrice($address = null)
+    public function getFrozenEnergyPrice(?string $address = null)
     {
         try {
             $accountres = $this->tron->getAccountResources($address);
@@ -131,7 +131,7 @@ class Stake extends TRX
     /**
      * 质押1trx获得的带宽
      */
-    public function getFrozenNetPrice($address = null)
+    public function getFrozenNetPrice(?string $address = null)
     {
         try {
             $accountres = $this->tron->getAccountResources($address);
